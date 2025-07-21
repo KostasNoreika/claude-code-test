@@ -1,0 +1,49 @@
+name: Claude Code Action
+
+# Trigger when someone mentions @claude in comments or creates issues/PRs
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  claude-assist:
+    # Only run when @claude is mentioned or for new issues/PRs
+    if: >
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && github.event.action == 'opened') ||
+      (github.event_name == 'pull_request' && github.event.action == 'opened')
+    
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      actions: read
+      checks: read
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Claude Code Action
+        uses: anthropics/claude-code-action@beta
+        with:
+          # Your Anthropic API key from GitHub Secrets
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          
+          # GitHub token for API access  
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Optional: Configure Claude behavior
+          # max_tokens: 4000
+          # temperature: 0.1
